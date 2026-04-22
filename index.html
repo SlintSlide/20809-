@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>終極密碼：生存模式</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #game-container {
+            width: 90%;
+            max-width: 600px;
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        #terminal {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px;
+            outline: none;
+            font-size: 1.1rem;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00ff00;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="terminal"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" autocomplete="off" autofocus>
+        <button onclick="handleInput()">確認</button>
+    </div>
+</div>
+
+<script>
+    const terminal = document.getElementById('terminal');
+    const userInput = document.getElementById('userInput');
+
+    let low, high, answer, max_attempts, attempts, gameState;
+
+    function print(text) {
+        terminal.innerText += text + '\n';
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function initGame() {
+        low = 1;
+        high = 100;
+        answer = Math.floor(Math.random() * (high - low - 1)) + low + 1;
+        max_attempts = 7;
+        attempts = 0;
+        gameState = "PLAYING";
+
+        print("==============================");
+        print("=====終極密碼:生存模式=====");
+        print(`範圍:${low}~${high}|你 只有${max_attempts}次機會!`);
+        print("==============================");
+        print(`\n目前範圍:${low}~${high}`);
+        print(`\n[${max_attempts - attempts}次機會]請輸入數字:`);
+    }
+
+    function handleInput() {
+        const val = userInput.value.trim();
+        userInput.value = "";
+        if (!val) return;
+
+        if (gameState === "PLAYING") {
+            processGuess(val);
+        } else if (gameState === "ASK_REPLAY") {
+            if (val === "1") {
+                terminal.innerText = "";
+                initGame();
+            } else {
+                print("感謝遊玩!下次見!");
+                gameState = "ENDED";
+                document.querySelector('.input-area').style.display = 'none';
+            }
+        }
+    }
+
+    function processGuess(val) {
+        const guess = parseInt(val);
+
+        if (isNaN(guess)) {
+            print("請輸入有效整數數字喔!");
+            return;
+        }
+
+        if (guess <= low || guess >= high) {
+            print(`超出範圍了!請輸入大於${low}且小於${high}的數字。`);
+            return;
+        }
+
+        attempts++;
+
+        if (guess === answer) {
+            print(`太強了!你在第${attempts}次就成功了!`);
+            endRound(true);
+        } else {
+            if (guess < answer) {
+                print("太小了!");
+                low = guess;
+            } else {
+                print("太大了!");
+                high = guess;
+            }
+
+            if (attempts >= max_attempts) {
+                print("轟隆!機會用完,遊戲失敗。");
+                print(`密碼其實是:${answer}`);
+                endRound(false);
+            } else {
+                print(`\n目前範圍:${low}~${high}`);
+                print(`\n[${max_attempts - attempts}次機會]請輸入數字:`);
+            }
+        }
+    }
+
+    function endRound(win) {
+        print("\n" + "=".repeat(30));
+        print("\n想再挑戰一次嗎?(輸入1繼續，其他鍵退出):");
+        gameState = "ASK_REPLAY";
+    }
+
+    userInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            handleInput();
+        }
+    });
+
+    initGame();
+</script>
+
+</body>
+</html>
